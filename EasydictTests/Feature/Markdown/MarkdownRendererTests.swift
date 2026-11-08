@@ -342,6 +342,41 @@ struct MarkdownRendererTests {
         #expect(layout.usedRect(for: container).width <= 100)
     }
 
+    @Test("Render Arabic result label screenshots")
+    func renderArabicLabelScreenshots() throws {
+        let plainText = "النسخة التي لا تتعفن من هذا الأمر محدودة: سجل علني للأعمال الحقيقية. الأرقام التي قمت بقياسها فعليًا، والندوب التي دفعت ثمنها فعليًا، والمنتجات التي قمت بتسليمها فعليًا. أما كل ما عدا ذلك فهو مجرد قناع"
+        let markdownText = "## الترجمة العربية\n\nهذا **نص عريض** و*نص مائل* مع [رابط](https://example.com) ورقم 123.\n\n- العنصر الأول\n- العنصر الثاني\n\n> اقتباس قصير"
+        try renderScreenshot(text: plainText, markdown: false, name: "arabic-result-label-plain.png")
+        try renderScreenshot(text: markdownText, markdown: true, name: "arabic-result-label-markdown.png")
+    }
+
+    private func renderScreenshot(text: String, markdown: Bool, name: String) throws {
+        let label = TranslationResultLabel(frame: NSRect(x: 0, y: 0, width: 760, height: 400))
+        label.markdownEnabled = markdown
+        label.font = .systemFont(ofSize: 18)
+        label.textContainerInset = NSSize(width: 8, height: 8)
+        label.text = text
+
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 760, height: 400))
+        container.wantsLayer = true
+        container.layer?.backgroundColor = NSColor.white.cgColor
+        container.addSubview(label)
+        label.frame = container.bounds
+        label.textContainer?.containerSize = NSSize(width: 744, height: .greatestFiniteMagnitude)
+        label.layoutManager?.ensureLayout(for: label.textContainer!)
+        let used = label.layoutManager!.usedRect(for: label.textContainer!)
+        let height = ceil(used.height) + 32
+        container.frame = NSRect(x: 0, y: 0, width: 760, height: height)
+        label.frame = container.bounds
+        container.layoutSubtreeIfNeeded()
+
+        let rep = try #require(container.bitmapImageRepForCachingDisplay(in: container.bounds))
+        container.cacheDisplay(in: container.bounds, to: rep)
+        let data = try #require(rep.representation(using: .png, properties: [:]))
+        let dir = ProcessInfo.processInfo.environment["EZDICT_SCREENSHOT_DIR"] ?? NSTemporaryDirectory()
+        try data.write(to: URL(fileURLWithPath: dir).appendingPathComponent(name))
+    }
+
     // MARK: Private
 
     private let baseSize: CGFloat = 14
