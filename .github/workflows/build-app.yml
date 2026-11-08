@@ -1,0 +1,41 @@
+name: Build Easydict debug app
+
+on:
+  push:
+    branches: [ci/build-app]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: xcode-27
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/arabic-cursive-kern
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          sw_vers -productVersion
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -workspace Easydict.xcworkspace \
+            -scheme Easydict \
+            -configuration Debug \
+            -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            2>&1 | tail -300
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Easydict-debug-app
+          path: ${{ runner.temp }}/DerivedData/Build/Products/Debug/Easydict-debug.app
+          if-no-files-found: error
