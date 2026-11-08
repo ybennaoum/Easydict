@@ -362,7 +362,7 @@ struct MarkdownRendererTests {
         container.layer?.backgroundColor = NSColor.white.cgColor
         container.addSubview(label)
         label.frame = container.bounds
-        label.textContainer?.containerSize = NSSize(width: 744, height: .greatestFiniteMagnitude)
+        label.textContainer?.containerSize = NSSize(width: 744, height: CGFloat.greatestFiniteMagnitude)
         label.layoutManager?.ensureLayout(for: label.textContainer!)
         let used = label.layoutManager!.usedRect(for: label.textContainer!)
         let height = ceil(used.height) + 32
